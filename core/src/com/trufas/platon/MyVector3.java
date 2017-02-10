@@ -24,10 +24,10 @@ public class MyVector3 extends Vector3 {
         return (float) Math.atan(Math.sqrt(this.x * this.x) / this.z);
     }
 
-    public void addRadius(float rad) {
+    public Vector3 addRadius(float rad) {
         float newR = rad + getRadius();
-        this.x += newR * Math.sin(getPolar()) * Math.cos(getAzimuthal());
-        this.y += newR * Math.sin(getPolar()) * Math.sin(getAzimuthal());
-        this.z += newR * Math.cos(getPolar());
+        return this.add((float) (newR * Math.sin(getPolar()) * Math.cos(getAzimuthal())),
+                (float) (newR * Math.sin(getPolar()) * Math.sin(getAzimuthal())),
+                (float) (newR * Math.cos(getPolar())));
     }
 }
