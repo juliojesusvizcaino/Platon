@@ -2,6 +2,7 @@ package com.trufas.platon;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -25,6 +26,7 @@ public class Platon extends ApplicationAdapter {
     private CameraInputController camController;
     private DirectionalLight light;
     private Model testModel;
+    private boolean compassAvail;
 
     @Override
     public void create() {
@@ -49,6 +51,8 @@ public class Platon extends ApplicationAdapter {
         assets = new AssetManager();
         assets.load("platon.g3db", Model.class);
         loading = true;
+
+        compassAvail = Gdx.input.isPeripheralAvailable(Input.Peripheral.Compass);
     }
 
     @Override
