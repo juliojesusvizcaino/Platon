@@ -78,6 +78,14 @@ public class Platon extends ApplicationAdapter {
         instances.add(testInstance);
     }
 
+    private float lpFilter(float x, float s, float delta) {
+        return lpFilter(x, s, delta, 0.2f);
+    }
+
+    private float lpFilter(float x, float s, float delta, float smoothing) {
+        return s + delta * (x - s) / smoothing;
+    }
+
 	@Override
 	public void render () {
         if (loading && assets.update())
