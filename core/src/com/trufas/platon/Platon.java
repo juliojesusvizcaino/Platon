@@ -63,6 +63,7 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         stage = new Stage();
         font = new BitmapFont();
         label = new Label(" ", new Label.LabelStyle(font, Color.BLACK));
+        label.setFontScale(2f);
         stage.addActor(label);
         stringBuilder = new StringBuilder();
     }
