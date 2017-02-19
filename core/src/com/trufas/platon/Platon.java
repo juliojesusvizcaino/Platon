@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
@@ -39,7 +38,7 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         cam.far = 300f;
         cam.update();
 
-        Gdx.input.setInputProcessor(camController);
+        Gdx.input.setInputProcessor(this);
 
         light = new DirectionalLight().set(0.8f, 0.8f, 0.8f, cam.direction);
 
@@ -64,7 +63,7 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
     }
 
     private void addTarget() {
-        MyModelInstance testInstance = (MyModelInstance) new ModelInstance(testModel, "test");
+        MyModelInstance testInstance = new MyModelInstance(testModel, "test");
         float posMax = 50, posMin = 10;
         MyVector3 pos = (MyVector3) new MyVector3().setToRandomDirection().scl(posMax - posMin);
         pos.addRadius(posMin);
@@ -156,6 +155,9 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        int object = getObject(screenX, screenY);
+        if (object != -1)
+            instances.removeIndex(getObject(screenX, screenY));
         return true;
     }
 

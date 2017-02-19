@@ -14,6 +14,16 @@ public class MyModelInstance extends ModelInstance {
 
     public MyModelInstance(Model model, String rootNode, boolean mergeTransform) {
         super(model, rootNode, mergeTransform);
+
+        calculateBoundingBox(bounds);
+        bounds.getCenter(center);
+        bounds.getDimensions(dimensions);
+        radius = dimensions.len() / 2f;
+    }
+
+    public MyModelInstance(final Model model, final String... rootNodeIds) {
+        super(model, rootNodeIds);
+
         calculateBoundingBox(bounds);
         bounds.getCenter(center);
         bounds.getDimensions(dimensions);
