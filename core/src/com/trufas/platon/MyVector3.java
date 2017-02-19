@@ -1,5 +1,6 @@
 package com.trufas.platon;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 
 public class MyVector3 extends Vector3 {
@@ -17,17 +18,17 @@ public class MyVector3 extends Vector3 {
     }
 
     public float getAzimuthal() {
-        return (float) Math.atan(this.y / this.x);
+        return MathUtils.atan2(-z, x);
     }
 
     public float getPolar() {
-        return (float) Math.atan(Math.sqrt(this.x * this.x) / this.z);
+        return (float) Math.acos(y / getRadius());
     }
 
     public Vector3 addRadius(float rad) {
         float newR = rad + getRadius();
-        return this.add((float) (newR * Math.sin(getPolar()) * Math.cos(getAzimuthal())),
-                (float) (newR * Math.sin(getPolar()) * Math.sin(getAzimuthal())),
-                (float) (newR * Math.cos(getPolar())));
+        return this.set(newR * MathUtils.sin(getPolar()) * MathUtils.cos(getAzimuthal()),
+                newR * MathUtils.cos(getPolar()),
+                -newR * MathUtils.sin(getPolar()) * MathUtils.sin(getAzimuthal()));
     }
 }

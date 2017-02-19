@@ -24,6 +24,7 @@ public class Platon extends ApplicationAdapter {
     private CameraInputController camController;
     private DirectionalLight light;
     private Model testModel;
+    private float elapsed = 0;
 
     @Override
     public void create() {
@@ -80,6 +81,13 @@ public class Platon extends ApplicationAdapter {
 
         cam.update();
         light.setDirection(cam.direction);
+
+        elapsed += Gdx.graphics.getDeltaTime();
+
+        if (elapsed > 1.0f) {
+            elapsed -= 1.0f;
+            addTarget();
+        }
 
         modelBatch.begin(cam);
         modelBatch.render(instances, environment);
