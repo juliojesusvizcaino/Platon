@@ -2,10 +2,8 @@ package com.trufas.platon;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
@@ -19,27 +17,24 @@ import com.badlogic.gdx.utils.Array;
 public class Platon extends ApplicationAdapter {
     private ModelBatch modelBatch;
     private Environment environment;
-    private PerspectiveCamera cam;
+    private MyCamera cam;
     private AssetManager assets;
     private boolean loading;
     private Array<ModelInstance> instances = new Array<ModelInstance>();
     private CameraInputController camController;
     private DirectionalLight light;
     private Model testModel;
-    private boolean compassAvail;
 
     @Override
     public void create() {
         modelBatch = new ModelBatch();
 
-        cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        cam = new MyCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         cam.position.set(0, 0, 0);
-        cam.lookAt(10f, 0, 0);
         cam.near = 1f;
         cam.far = 300f;
         cam.update();
 
-        camController = new CameraInputController(cam);
         Gdx.input.setInputProcessor(camController);
 
         light = new DirectionalLight().set(0.8f, 0.8f, 0.8f, cam.direction);
@@ -51,8 +46,6 @@ public class Platon extends ApplicationAdapter {
         assets = new AssetManager();
         assets.load("platon.g3db", Model.class);
         loading = true;
-
-        compassAvail = Gdx.input.isPeripheralAvailable(Input.Peripheral.Compass);
     }
 
     @Override
@@ -78,14 +71,6 @@ public class Platon extends ApplicationAdapter {
         instances.add(testInstance);
     }
 
-    private float lpFilter(float x, float s, float delta) {
-        return lpFilter(x, s, delta, 0.2f);
-    }
-
-    private float lpFilter(float x, float s, float delta, float smoothing) {
-        return s + delta * (x - s) / smoothing;
-    }
-
 	@Override
 	public void render () {
         if (loading && assets.update())
@@ -93,7 +78,7 @@ public class Platon extends ApplicationAdapter {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-        camController.update();
+        cam.update();
         light.setDirection(cam.direction);
 
         modelBatch.begin(cam);
