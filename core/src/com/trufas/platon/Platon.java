@@ -2,25 +2,27 @@ package com.trufas.platon;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 
-public class Platon extends ApplicationAdapter {
+public class Platon extends ApplicationAdapter implements InputProcessor {
     private ModelBatch modelBatch;
     private Environment environment;
     private MyCamera cam;
     private AssetManager assets;
     private boolean loading;
-    private Array<ModelInstance> instances = new Array<ModelInstance>();
+    private Array<MyModelInstance> instances = new Array<MyModelInstance>();
     private CameraInputController camController;
     private DirectionalLight light;
     private Model testModel;
@@ -36,7 +38,7 @@ public class Platon extends ApplicationAdapter {
         cam.far = 300f;
         cam.update();
 
-        Gdx.input.setInputProcessor(camController);
+        Gdx.input.setInputProcessor(this);
 
         light = new DirectionalLight().set(0.8f, 0.8f, 0.8f, cam.direction);
 
@@ -61,7 +63,7 @@ public class Platon extends ApplicationAdapter {
     }
 
     private void addTarget() {
-        ModelInstance testInstance = new ModelInstance(testModel, "test");
+        MyModelInstance testInstance = new MyModelInstance(testModel, "test");
         float posMax = 50, posMin = 10;
         MyVector3 pos = (MyVector3) new MyVector3().setToRandomDirection().scl(posMax - posMin);
         pos.addRadius(posMin);
@@ -109,5 +111,73 @@ public class Platon extends ApplicationAdapter {
         modelBatch.dispose();
         instances.clear();
         assets.dispose();
+    }
+
+    public int getObject(int screenX, int screenY) {
+        Ray ray = cam.getPickRay(screenX, screenY);
+        int result = -1;
+        Vector3 position = new Vector3();
+        float distance = -1;
+
+        for (int i = 0; i < instances.size; i++) {
+            final MyModelInstance instance = instances.get(i);
+
+            instance.transform.getTranslation(position);
+            position.add(instance.center);
+
+            float dist2 = ray.origin.dst2(position);
+            if (distance >= 0f && dist2 > distance)
+                continue;
+
+            if (Intersector.intersectRaySphere(ray, position, instance.radius, null)) {
+                result = i;
+                distance = dist2;
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public boolean keyDown(int keycode) {
+        return false;
+    }
+
+    @Override
+    public boolean keyUp(int keycode) {
+        return false;
+    }
+
+    @Override
+    public boolean keyTyped(char character) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        int object = getObject(screenX, screenY);
+        if (object != -1)
+            instances.removeIndex(getObject(screenX, screenY));
+        return true;
+    }
+
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+        return false;
+    }
+
+    @Override
+    public boolean mouseMoved(int screenX, int screenY) {
+        return false;
+    }
+
+    @Override
+    public boolean scrolled(int amount) {
+        return false;
     }
 }
