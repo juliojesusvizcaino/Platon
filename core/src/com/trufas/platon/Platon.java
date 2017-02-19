@@ -4,7 +4,9 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
@@ -14,6 +16,8 @@ import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Array;
 
 public class Platon extends ApplicationAdapter implements InputProcessor {
@@ -27,6 +31,11 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
     private DirectionalLight light;
     private Model testModel;
     private float elapsed = 0;
+    protected Stage stage;
+    protected Label label;
+    protected BitmapFont font;
+    protected StringBuilder stringBuilder;
+    int destroyNum = 0;
 
     @Override
     public void create() {
@@ -49,11 +58,17 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         assets = new AssetManager();
         assets.load("platon.g3db", Model.class);
         loading = true;
+
+        stage = new Stage();
+        font = new BitmapFont();
+        label = new Label(" ", new Label.LabelStyle(font, Color.WHITE));
+        stage.addActor(label);
+        stringBuilder = new StringBuilder();
     }
 
     @Override
     public void resize(int width, int height) {
-
+        stage.getViewport().update(width, height, true);
     }
 
     private void doneLoading() {
@@ -94,6 +109,12 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         modelBatch.begin(cam);
         modelBatch.render(instances, environment);
         modelBatch.end();
+
+        stringBuilder.setLength(0);
+        stringBuilder.append(" Destroyed: ").append(destroyNum);
+        stringBuilder.append(" Remain: ").append(instances.size);
+        label.setText(stringBuilder);
+        stage.draw();
     }
 
     @Override
@@ -156,8 +177,11 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         int object = getObject(screenX, screenY);
-        if (object != -1)
+        if (object != -1) {
             instances.removeIndex(getObject(screenX, screenY));
+            destroyNum++;
+        }
+
         return true;
     }
 
