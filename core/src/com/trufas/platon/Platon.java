@@ -61,7 +61,7 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
 
         stage = new Stage();
         font = new BitmapFont();
-        label = new Label(" ", new Label.LabelStyle(font, Color.WHITE));
+        label = new Label(" ", new Label.LabelStyle(font, Color.BLACK));
         stage.addActor(label);
         stringBuilder = new StringBuilder();
     }
@@ -94,6 +94,7 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         if (loading && assets.update())
             doneLoading();
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        Gdx.gl.glClearColor(240 / 255f, 240 / 255f, 240 / 255f, 0.5f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         cam.update();
