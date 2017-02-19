@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -79,8 +80,8 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
 
     private void addTarget() {
         MyModelInstance testInstance = new MyModelInstance(testModel, "test");
-        float posMax = 50, posMin = 10;
-        MyVector3 pos = (MyVector3) new MyVector3().setToRandomDirection().scl(posMax - posMin);
+        float posMax = 30, posMin = 5;
+        MyVector3 pos = (MyVector3) new MyVector3().setToRandomDirection().scl(MathUtils.random()).scl(posMax - posMin);
         pos.addRadius(posMin);
 
         testInstance.transform.setToTranslation(pos).
