@@ -42,10 +42,11 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
     private Stage endStage;
     private StringBuilder stringBuilder;
     private int destroyNum = 0;
-    private float time = 5;
+    private float time = 30;
     private Label remainLabel, timeLabel, destroyLabel, endLabel;
     private Skin skin;
     private boolean screenLoaded = false;
+    private float limit = 1.0f;
 
     @Override
     public void create() {
@@ -138,6 +139,8 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         instances.clear();
         time = 30;
         screenLoaded = false;
+        limit = 1.0f;
+        elapsed = 0f;
         Gdx.input.setInputProcessor(this);
     }
 
@@ -185,8 +188,9 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
 
         elapsed += Gdx.graphics.getDeltaTime();
 
-        if (elapsed > 1.0f) {
-            elapsed -= 1.0f;
+        if (elapsed > limit) {
+            elapsed -= limit;
+            limit *= 0.95f;
             addTarget();
         }
 
