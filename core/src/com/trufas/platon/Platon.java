@@ -12,14 +12,15 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 public class Platon extends ApplicationAdapter implements InputProcessor {
     private ModelBatch modelBatch;
@@ -28,15 +29,14 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
     private AssetManager assets;
     private boolean loading;
     private Array<MyModelInstance> instances = new Array<MyModelInstance>();
-    private CameraInputController camController;
     private DirectionalLight light;
     private Model testModel;
     private float elapsed = 0;
-    protected Stage stage;
-    protected Label label;
-    protected BitmapFont font;
-    protected StringBuilder stringBuilder;
-    int destroyNum = 0;
+    private Stage stage;
+    private StringBuilder stringBuilder;
+    private int destroyNum = 0;
+    private float time = 30;
+    private Label remainLabel, timeLabel, destroyLabel;
 
     @Override
     public void create() {
@@ -60,12 +60,28 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         assets.load("platon.g3db", Model.class);
         loading = true;
 
-        stage = new Stage();
-        font = new BitmapFont();
-        label = new Label(" ", new Label.LabelStyle(font, Color.BLACK));
-        label.setFontScale(2f);
-        stage.addActor(label);
+        stage = new Stage(new ExtendViewport(640, 480, 800, 480));
+        BitmapFont font = new BitmapFont();
+        remainLabel = new Label(" ", new Label.LabelStyle(font, Color.BLACK));
+        timeLabel = new Label(" ", new Label.LabelStyle(font, Color.BLACK));
+        destroyLabel = new Label(" ", new Label.LabelStyle(font, Color.BLACK));
         stringBuilder = new StringBuilder();
+
+        Table table = new Table();
+        Table timeTable = new Table();
+        Table destroyTable = new Table();
+        Table remainTable = new Table();
+
+        table.setFillParent(true);
+        table.top();
+        table.add(destroyTable).expandX().fill();
+        table.add(timeTable).expandX().fill();
+        table.add(remainTable).expandX().fill();
+        destroyTable.add(destroyLabel).expand().left();
+        timeTable.add(timeLabel).expand().center();
+        remainTable.add(remainLabel).expand().right();
+
+        stage.addActor(table);
     }
 
     @Override
@@ -102,6 +118,7 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         cam.update();
         light.setDirection(cam.direction);
 
+        time -= Gdx.graphics.getDeltaTime();
         elapsed += Gdx.graphics.getDeltaTime();
 
         if (elapsed > 1.0f) {
@@ -114,9 +131,14 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         modelBatch.end();
 
         stringBuilder.setLength(0);
-        stringBuilder.append(" Destroyed: ").append(destroyNum);
-        stringBuilder.append(" Remain: ").append(instances.size);
-        label.setText(stringBuilder);
+        stringBuilder.append(destroyNum);
+        destroyLabel.setText(stringBuilder);
+        stringBuilder.setLength(0);
+        stringBuilder.append(instances.size);
+        remainLabel.setText(stringBuilder);
+        stringBuilder.setLength(0);
+        stringBuilder.append(((int) time));
+        timeLabel.setText(stringBuilder);
         stage.draw();
     }
 
@@ -137,7 +159,7 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         assets.dispose();
     }
 
-    public int getObject(int screenX, int screenY) {
+    private int getObject(int screenX, int screenY) {
         Ray ray = cam.getPickRay(screenX, screenY);
         int result = -1;
         Vector3 position = new Vector3();
