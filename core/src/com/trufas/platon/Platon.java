@@ -6,20 +6,27 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 public class Platon extends ApplicationAdapter implements InputProcessor {
     private ModelBatch modelBatch;
@@ -28,15 +35,18 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
     private AssetManager assets;
     private boolean loading;
     private Array<MyModelInstance> instances = new Array<MyModelInstance>();
-    private CameraInputController camController;
     private DirectionalLight light;
     private Model testModel;
     private float elapsed = 0;
-    protected Stage stage;
-    protected Label label;
-    protected BitmapFont font;
-    protected StringBuilder stringBuilder;
-    int destroyNum = 0;
+    private Stage stage;
+    private Stage endStage;
+    private StringBuilder stringBuilder;
+    private int destroyNum = 0;
+    private float time = 30;
+    private Label remainLabel, timeLabel, destroyLabel, endLabel;
+    private Skin skin;
+    private boolean screenLoaded = false;
+    private float limit = 1.0f;
 
     @Override
     public void create() {
@@ -60,12 +70,78 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         assets.load("platon.g3db", Model.class);
         loading = true;
 
-        stage = new Stage();
-        font = new BitmapFont();
-        label = new Label(" ", new Label.LabelStyle(font, Color.BLACK));
-        label.setFontScale(2f);
-        stage.addActor(label);
+        stage = new Stage(new ExtendViewport(640, 480, 800, 480));
+        endStage = new Stage(new ExtendViewport(640, 480, 800, 480));
+        BitmapFont font = new BitmapFont();
+        remainLabel = new Label(" ", new Label.LabelStyle(font, Color.BLACK));
+        timeLabel = new Label(" ", new Label.LabelStyle(font, Color.BLACK));
+        destroyLabel = new Label(" ", new Label.LabelStyle(font, Color.BLACK));
+        endLabel = new Label(" ", new Label.LabelStyle(font, Color.BLACK));
         stringBuilder = new StringBuilder();
+
+        Table table = new Table();
+        Table timeTable = new Table();
+        Table destroyTable = new Table();
+        Table remainTable = new Table();
+        Table endTable = new Table();
+
+        table.setFillParent(true);
+        table.top();
+        table.add(destroyTable).expandX().fill();
+        table.add(timeTable).expandX().fill();
+        table.add(remainTable).expandX().fill();
+        destroyTable.add(destroyLabel).expand().left();
+        timeTable.add(timeLabel).expand().center();
+        remainTable.add(remainLabel).expand().right();
+
+
+        skin = new Skin();
+
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.WHITE);
+        pixmap.fill();
+        skin.add("white", new Texture(pixmap));
+
+        skin.add("default", font);
+
+        // Configure a TextButtonStyle and name it "default". Skin resources are stored by type, so this doesn't overwrite the font.
+        TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
+        textButtonStyle.up = skin.newDrawable("white", Color.DARK_GRAY);
+        textButtonStyle.down = skin.newDrawable("white", Color.DARK_GRAY);
+        textButtonStyle.checked = skin.newDrawable("white", Color.BLUE);
+        textButtonStyle.over = skin.newDrawable("white", Color.LIGHT_GRAY);
+        textButtonStyle.font = skin.getFont("default");
+        skin.add("default", textButtonStyle);
+
+        endTable.setFillParent(true);
+        stage.addActor(table);
+        endStage.addActor(endTable);
+
+
+        TextButton resetButton = new TextButton("RESET", skin);
+
+        endTable.center();
+        endTable.add(endLabel).center();
+        endTable.row();
+        endTable.add(resetButton);
+
+        resetButton.addListener(new ClickListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                resetGame();
+                return super.touchDown(event, x, y, pointer, button);
+            }
+        });
+    }
+
+    private void resetGame() {
+        destroyNum = 0;
+        instances.clear();
+        time = 30;
+        screenLoaded = false;
+        limit = 1.0f;
+        elapsed = 0f;
+        Gdx.input.setInputProcessor(this);
     }
 
     @Override
@@ -99,13 +175,22 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         Gdx.gl.glClearColor(240 / 255f, 240 / 255f, 240 / 255f, 0.5f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-        cam.update();
-        light.setDirection(cam.direction);
+        if (time > 0) {
+            cam.update();
+            light.setDirection(cam.direction);
+            time -= Gdx.graphics.getDeltaTime();
+
+        } else {
+            endGame();
+            endStage.act(Gdx.graphics.getDeltaTime());
+            endStage.draw();
+        }
 
         elapsed += Gdx.graphics.getDeltaTime();
 
-        if (elapsed > 1.0f) {
-            elapsed -= 1.0f;
+        if (elapsed > limit) {
+            elapsed -= limit;
+            limit *= 0.95f;
             addTarget();
         }
 
@@ -114,10 +199,25 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         modelBatch.end();
 
         stringBuilder.setLength(0);
-        stringBuilder.append(" Destroyed: ").append(destroyNum);
-        stringBuilder.append(" Remain: ").append(instances.size);
-        label.setText(stringBuilder);
+        stringBuilder.append(destroyNum);
+        destroyLabel.setText(stringBuilder);
+        stringBuilder.setLength(0);
+        stringBuilder.append(instances.size);
+        remainLabel.setText(stringBuilder);
+        stringBuilder.setLength(0);
+        stringBuilder.append(((int) time));
+        timeLabel.setText(stringBuilder);
         stage.draw();
+    }
+
+    private void endGame() {
+        if (!screenLoaded) {
+            Gdx.input.setInputProcessor(endStage);
+            stringBuilder.setLength(0);
+            stringBuilder.append(destroyNum);
+            endLabel.setText(stringBuilder);
+            screenLoaded = true;
+        }
     }
 
     @Override
@@ -135,9 +235,12 @@ public class Platon extends ApplicationAdapter implements InputProcessor {
         modelBatch.dispose();
         instances.clear();
         assets.dispose();
+        stage.dispose();
+        endStage.dispose();
+        skin.dispose();
     }
 
-    public int getObject(int screenX, int screenY) {
+    private int getObject(int screenX, int screenY) {
         Ray ray = cam.getPickRay(screenX, screenY);
         int result = -1;
         Vector3 position = new Vector3();
